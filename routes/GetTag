@@ -1,0 +1,18 @@
+package routes
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/lea-video/go-lea-music/model"
+)
+
+func (rw *RouteWrapper) GetTag(c *fiber.Ctx) error {
+	var tag []model.Tag
+
+	result := rw.DB.Find(&tag)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// reply with tag
+	return c.JSON(tag)
+}

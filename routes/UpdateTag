@@ -1,0 +1,20 @@
+package routes
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/lea-video/go-lea-music/model"
+)
+
+func (rw *RouteWrapper) UpdateTag(c *fiber.Ctx) error {
+	// read tag from body
+	tag := &model.Tag{}
+	err := c.BodyParser(tag)
+	if err != nil {
+		return err
+	}
+
+	rw.DB.Save(tag)
+
+	// reply with tag (including ID)
+	return c.JSON(tag)
+}

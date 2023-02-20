@@ -1,18 +1,15 @@
 package main
 
-import (
-	"github.com/lea-video/go-lea-music/model"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-)
+import "github.com/lea-video/go-lea-music/gorm"
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("test.sqlite"), &gorm.Config{})
+	db, err := gorm.InitSQLite("test.sqlite")
 	panicOn(err)
 
-	// Migrate the schema
-	err = model.AutoMigrate(db)
-	panicOn(err)
+	// start rest server
+	app := prepServer()
+	addRoutes(app, db)
+	startServer(app)
 }
 
 func panicOn(err error) {

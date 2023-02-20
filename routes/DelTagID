@@ -1,0 +1,21 @@
+package routes
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/lea-video/go-lea-music/model"
+)
+
+func (rw *RouteWrapper) DelTagID(c *fiber.Ctx) error {
+	tagID, err := c.ParamsInt("id")
+	if err != nil {
+		return err
+	}
+
+	// Delete - delete product
+	result := rw.DB.Delete(&model.Tag{}, tagID)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return c.JSON(result.RowsAffected != 0)
+}
