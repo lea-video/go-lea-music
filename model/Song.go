@@ -1,7 +1,18 @@
 package model
 
+// NOTE: unused
 type Song struct {
-	ID   int
-	Name string
-	// Tags []*Tag `gorm:"many2many:link_tags_to_song;"`
+	ID            int
+	Name          string
+	Artists       []int
+	PreferedAudio int
+	PreferedVideo int
+}
+
+// NOTE: unused
+type Performance struct {
+	ID      int
+	Song    int
+	Artists []int
+	Media   []int
 }

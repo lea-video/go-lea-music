@@ -1,14 +1,21 @@
 package main
 
-import "github.com/lea-video/go-lea-music/gorm"
+import (
+	db_sqlite "github.com/lea-video/go-lea-music/db/sqlite"
+	"github.com/lea-video/go-lea-music/filebackends"
+)
 
 func main() {
-	db, err := gorm.InitSQLite("test.sqlite")
+	// db, err := db_mock.InitMockDB()
+	db, err := db_sqlite.InitSQLite("test.sqlite")
+	panicOn(err)
+
+	fileDB, err := filebackends.InitLocalFileDB("./files/")
 	panicOn(err)
 
 	// start rest server
 	app := prepServer()
-	addRoutes(app, db)
+	addRoutes(app, db, fileDB)
 	startServer(app)
 }
 

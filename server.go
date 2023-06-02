@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/lea-video/go-lea-music/routes"
 	"log"
+
+	"github.com/lea-video/go-lea-music/db"
+	"github.com/lea-video/go-lea-music/routes"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -24,32 +26,20 @@ func prepServer() *fiber.App {
 	return app
 }
 
-func addRoutes(app *fiber.App, db routes.GenericDB) {
-	wrapper := routes.RouteWrapper{DB: db}
+func addRoutes(app *fiber.App, db db.GenericDB, fileDB db.GenericFileDB) {
+	wrapper := routes.RouteWrapper{DB: db, FileDB: fileDB}
 
-	app.Get("/api/v1/artist", wrapper.GetArtist)
-	app.Post("/api/v1/artist", wrapper.PostArtist)
-	app.Patch("/api/v1/artist", wrapper.UpdateArtist)
-	app.Get("/api/v1/artist/:id", wrapper.GetArtistID)
-	app.Delete("/api/v1/artist/:id", wrapper.DelArtistID)
+	app.Get("/api/v1/artist", wrapper.GetArtists)
+	app.Get("/api/v1/artist/solo", wrapper.GetArtistSolos)
+	app.Post("/api/v1/artist/solo", wrapper.CreateArtistSolo)
+	app.Get("/api/v1/artist/group", wrapper.GetArtistGroups)
+	app.Post("/api/v1/artist/group", wrapper.CreateArtistGroup)
 
-	app.Get("/api/v1/song", wrapper.GetSong)
-	app.Post("/api/v1/song", wrapper.PostSong)
-	app.Patch("/api/v1/song", wrapper.UpdateSong)
-	app.Get("/api/v1/song/:id", wrapper.GetSongID)
-	app.Delete("/api/v1/song/:id", wrapper.DelSongID)
-
-	app.Get("/api/v1/variation", wrapper.GetVariation)
-	app.Post("/api/v1/variation", wrapper.PostVariation)
-	app.Patch("/api/v1/variation", wrapper.UpdateVariation)
-	app.Get("/api/v1/variation/:id", wrapper.GetVariationID)
-	app.Delete("/api/v1/variation/:id", wrapper.DelVariationID)
-
-	// app.Get("/api/v1/tag", wrapper.GetTag)
-	// app.Post("/api/v1/tag", wrapper.PostTag)
-	// app.Patch("/api/v1/tag", wrapper.UpdateTag)
-	// app.Get("/api/v1/tag/:id", wrapper.GetTagID)
-	// app.Delete("/api/v1/tag/:id", wrapper.DelTagID)
+	app.Post("/api/V1/media", wrapper.CreateMedia)
+	app.Get("/api/V1/media", wrapper.GetMedia)
+	app.Get("/api/v1/media/:mid/tracks", wrapper.GetMediaTracks)
+	app.Post("/api/v1/media/:mid/upload", wrapper.CreateMediaTMPFile)
+	app.Post("/api/v1/upload/:uid", wrapper.AppendMediaTMPFileChunk)
 }
 
 func startServer(app *fiber.App) {
