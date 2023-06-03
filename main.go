@@ -1,13 +1,13 @@
 package main
 
 import (
-	db_sqlite "github.com/lea-video/go-lea-music/db/sqlite"
+	dbSQLite "github.com/lea-video/go-lea-music/db/sqlite"
 	"github.com/lea-video/go-lea-music/filebackends"
 )
 
 func main() {
 	// db, err := db_mock.InitMockDB()
-	db, err := db_sqlite.InitSQLite("test.sqlite")
+	db, err := dbSQLite.InitSQLite("test.sqlite")
 	panicOn(err)
 
 	fileDB, err := filebackends.InitLocalFileDB("./files/")

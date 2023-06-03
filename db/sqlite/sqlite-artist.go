@@ -8,7 +8,7 @@ import (
 	"github.com/lea-video/go-lea-music/utility"
 )
 
-func (db *SQLiteDB) GetArtists() (map[int]*model.OneOfArtist, error) {
+func (db *LEASQLiteDB) GetArtists() (map[int]*model.OneOfArtist, error) {
 	solos, err := db.GetArtistSolos()
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (db *SQLiteDB) GetArtists() (map[int]*model.OneOfArtist, error) {
 	return artists, nil
 }
 
-func (db *SQLiteDB) GetArtistsByID(artistIDs []int) (map[int]*model.OneOfArtist, error) {
+func (db *LEASQLiteDB) GetArtistsByID(artistIDs []int) (map[int]*model.OneOfArtist, error) {
 	solos, err := db.GetArtistSolosByID(artistIDs)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (db *SQLiteDB) GetArtistsByID(artistIDs []int) (map[int]*model.OneOfArtist,
 	return artists, nil
 }
 
-func (db *SQLiteDB) GetArtistSolos() (map[int]*model.ArtistSolo, error) {
+func (db *LEASQLiteDB) GetArtistSolos() (map[int]*model.ArtistSolo, error) {
 	rows, err := db.db.Query("SELECT id, name FROM artists WHERE is_group = 0")
 	if err != nil {
 		return nil, err
@@ -79,14 +79,14 @@ func (db *SQLiteDB) GetArtistSolos() (map[int]*model.ArtistSolo, error) {
 	return artists, nil
 }
 
-func (db *SQLiteDB) GetArtistSolosByID(artistIDs []int) (map[int]*model.ArtistSolo, error) {
-	in_placeholder, in_args := build_in_args(artistIDs)
+func (db *LEASQLiteDB) GetArtistSolosByID(artistIDs []int) (map[int]*model.ArtistSolo, error) {
+	inPlaceholder, inArgs := buildINStatement(artistIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, name FROM artists WHERE is_group = 0 AND id IN (%s)", in_placeholder)
+	query := fmt.Sprintf("SELECT id, name FROM artists WHERE is_group = 0 AND id IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
-	rows, err := db.db.Query(query, in_args...)
+	rows, err := db.db.Query(query, inArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (db *SQLiteDB) GetArtistSolosByID(artistIDs []int) (map[int]*model.ArtistSo
 	return artists, nil
 }
 
-func (db *SQLiteDB) CreateArtistSolos(artists []*model.ArtistSolo) (map[int]*model.ArtistSolo, error) {
+func (db *LEASQLiteDB) CreateArtistSolos(artists []*model.ArtistSolo) (map[int]*model.ArtistSolo, error) {
 	insertStmt := "INSERT INTO artists (name, is_group) VALUES (?, ?);"
 
 	tx, err := db.db.Begin()
@@ -125,7 +125,7 @@ func (db *SQLiteDB) CreateArtistSolos(artists []*model.ArtistSolo) (map[int]*mod
 	}
 	defer stmt.Close()
 
-	artists_w_id := make(map[int]*model.ArtistSolo)
+	artistsWithID := make(map[int]*model.ArtistSolo)
 	for _, artist := range artists {
 		result, err := stmt.Exec(artist.Name, 0)
 		if err != nil {
@@ -140,7 +140,7 @@ func (db *SQLiteDB) CreateArtistSolos(artists []*model.ArtistSolo) (map[int]*mod
 		}
 
 		artist.ID = int(id)
-		artists_w_id[artist.ID] = artist
+		artistsWithID[artist.ID] = artist
 	}
 
 	// Commit the transaction
@@ -150,10 +150,10 @@ func (db *SQLiteDB) CreateArtistSolos(artists []*model.ArtistSolo) (map[int]*mod
 		return nil, err
 	}
 
-	return artists_w_id, nil
+	return artistsWithID, nil
 }
 
-func (db *SQLiteDB) GetArtistGroups() (map[int]*model.ArtistGroup, error) {
+func (db *LEASQLiteDB) GetArtistGroups() (map[int]*model.ArtistGroup, error) {
 	rows, err := db.db.Query("SELECT id, name, members FROM view_artist_groups")
 	if err != nil {
 		return nil, err
@@ -163,12 +163,12 @@ func (db *SQLiteDB) GetArtistGroups() (map[int]*model.ArtistGroup, error) {
 	artists := make(map[int]*model.ArtistGroup)
 	for rows.Next() {
 		var artistGroups model.ArtistGroup
-		var member_list sql.NullString
-		err := rows.Scan(&artistGroups.ID, &artistGroups.Name, &member_list)
+		var memberList sql.NullString
+		err := rows.Scan(&artistGroups.ID, &artistGroups.Name, &memberList)
 		if err != nil {
 			return nil, err
 		}
-		artistGroups.Members, err = utility.SplitList(member_list)
+		artistGroups.Members, err = utility.SplitList(memberList)
 		if err != nil {
 			return nil, err
 		}
@@ -183,14 +183,14 @@ func (db *SQLiteDB) GetArtistGroups() (map[int]*model.ArtistGroup, error) {
 	return artists, nil
 }
 
-func (db *SQLiteDB) GetArtistGroupsByID(artistIDs []int) (map[int]*model.ArtistGroup, error) {
-	in_placeholder, in_args := build_in_args(artistIDs)
+func (db *LEASQLiteDB) GetArtistGroupsByID(artistIDs []int) (map[int]*model.ArtistGroup, error) {
+	inPlaceholder, inArgs := buildINStatement(artistIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, name, members FROM view_artist_groups WHERE id IN (%s)", in_placeholder)
+	query := fmt.Sprintf("SELECT id, name, members FROM view_artist_groups WHERE id IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
-	rows, err := db.db.Query(query, in_args...)
+	rows, err := db.db.Query(query, inArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -199,12 +199,12 @@ func (db *SQLiteDB) GetArtistGroupsByID(artistIDs []int) (map[int]*model.ArtistG
 	artists := make(map[int]*model.ArtistGroup)
 	for rows.Next() {
 		var artistGroups model.ArtistGroup
-		var member_list sql.NullString
-		err := rows.Scan(&artistGroups.ID, &artistGroups.Name, &member_list)
+		var memberList sql.NullString
+		err := rows.Scan(&artistGroups.ID, &artistGroups.Name, &memberList)
 		if err != nil {
 			return nil, err
 		}
-		artistGroups.Members, err = utility.SplitList(member_list)
+		artistGroups.Members, err = utility.SplitList(memberList)
 		if err != nil {
 			return nil, err
 		}
@@ -219,7 +219,7 @@ func (db *SQLiteDB) GetArtistGroupsByID(artistIDs []int) (map[int]*model.ArtistG
 	return artists, nil
 }
 
-func (db *SQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int]*model.ArtistGroup, error) {
+func (db *LEASQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int]*model.ArtistGroup, error) {
 	insertArtist := "INSERT INTO artists (name, is_group) VALUES (?, ?);"
 	insertMember := "INSERT INTO map_artist_group_members (artist_group, member) VALUES (?, ?);"
 
@@ -242,7 +242,7 @@ func (db *SQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int]*m
 	}
 	defer stmtMem.Close()
 
-	artists_w_id := make(map[int]*model.ArtistGroup)
+	artistsWithID := make(map[int]*model.ArtistGroup)
 	for _, artist := range artists {
 		result, err := stmtArt.Exec(artist.Name, 1)
 		if err != nil {
@@ -257,7 +257,7 @@ func (db *SQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int]*m
 		}
 
 		artist.ID = int(id)
-		artists_w_id[artist.ID] = artist
+		artistsWithID[artist.ID] = artist
 
 		// insert the members
 		for _, m := range artist.Members {
@@ -276,5 +276,5 @@ func (db *SQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int]*m
 		return nil, err
 	}
 
-	return artists_w_id, nil
+	return artistsWithID, nil
 }

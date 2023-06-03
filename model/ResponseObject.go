@@ -6,8 +6,8 @@ type ResponseObject struct {
 	Artists map[int]*OneOfArtist `json:"artists,omitempty"`
 
 	Media      map[int]*Media      `json:"media,omitempty"`
-	MediaTrack map[int]*MediaTrack `json:"mediatrack,omitempty"`
-	TMPFile    map[int]*TMPFile    `json:"tmpfile,omitempty"`
+	MediaTrack map[int]*MediaTrack `json:"mediaTracks,omitempty"`
+	TMPFile    map[int]*TMPFile    `json:"tmpFiles,omitempty"`
 
 	Playlists   map[int]*Playlist    `json:"playlists,omitempty"`
 	Clip        map[int]*Clip        `json:"clips,omitempty"`

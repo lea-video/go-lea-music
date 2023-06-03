@@ -8,7 +8,7 @@ import (
 	"github.com/lea-video/go-lea-music/utility"
 )
 
-func (db *SQLiteDB) GetMedia() (map[int]*model.Media, error) {
+func (db *LEASQLiteDB) GetMedia() (map[int]*model.Media, error) {
 	rows, err := db.db.Query("SELECT id, source, tracks FROM view_media_tracks")
 	if err != nil {
 		return nil, err
@@ -18,12 +18,12 @@ func (db *SQLiteDB) GetMedia() (map[int]*model.Media, error) {
 	allMedia := make(map[int]*model.Media)
 	for rows.Next() {
 		var media model.Media
-		var track_list sql.NullString
-		err := rows.Scan(&media.ID, &media.Source, &track_list)
+		var trackList sql.NullString
+		err := rows.Scan(&media.ID, &media.Source, &trackList)
 		if err != nil {
 			return nil, err
 		}
-		media.Tracks, err = utility.SplitList(track_list)
+		media.Tracks, err = utility.SplitList(trackList)
 		if err != nil {
 			return nil, err
 		}
@@ -38,14 +38,14 @@ func (db *SQLiteDB) GetMedia() (map[int]*model.Media, error) {
 	return allMedia, nil
 }
 
-func (db *SQLiteDB) GetMediaByID(mediaIDs []int) (map[int]*model.Media, error) {
-	in_placeholder, in_args := build_in_args(mediaIDs)
+func (db *LEASQLiteDB) GetMediaByID(mediaIDs []int) (map[int]*model.Media, error) {
+	inPlaceholder, inArgs := buildINStatement(mediaIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, source, tracks FROM view_media_tracks WHERE parentMedia IN (%s)", in_placeholder)
+	query := fmt.Sprintf("SELECT id, source, tracks FROM view_media_tracks WHERE parentMedia IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
-	rows, err := db.db.Query(query, in_args...)
+	rows, err := db.db.Query(query, inArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,12 +54,12 @@ func (db *SQLiteDB) GetMediaByID(mediaIDs []int) (map[int]*model.Media, error) {
 	allMedia := make(map[int]*model.Media)
 	for rows.Next() {
 		var media model.Media
-		var track_list sql.NullString
-		err := rows.Scan(&media.ID, &media.Source, &track_list)
+		var trackList sql.NullString
+		err := rows.Scan(&media.ID, &media.Source, &trackList)
 		if err != nil {
 			return nil, err
 		}
-		media.Tracks, err = utility.SplitList(track_list)
+		media.Tracks, err = utility.SplitList(trackList)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func (db *SQLiteDB) GetMediaByID(mediaIDs []int) (map[int]*model.Media, error) {
 	return allMedia, nil
 }
 
-func (db *SQLiteDB) CreateMedia(media []*model.Media) (map[int]*model.Media, error) {
+func (db *LEASQLiteDB) CreateMedia(media []*model.Media) (map[int]*model.Media, error) {
 	insertStmt := "INSERT INTO media (source) VALUES (?);"
 
 	tx, err := db.db.Begin()
@@ -89,7 +89,7 @@ func (db *SQLiteDB) CreateMedia(media []*model.Media) (map[int]*model.Media, err
 	}
 	defer stmt.Close()
 
-	media_w_id := make(map[int]*model.Media)
+	mediaWithID := make(map[int]*model.Media)
 	for _, m := range media {
 		result, err := stmt.Exec(m.Source)
 		if err != nil {
@@ -106,7 +106,7 @@ func (db *SQLiteDB) CreateMedia(media []*model.Media) (map[int]*model.Media, err
 		// TODO: insert tracks
 
 		m.ID = int(id)
-		media_w_id[m.ID] = m
+		mediaWithID[m.ID] = m
 	}
 
 	// Commit the transaction
@@ -116,17 +116,17 @@ func (db *SQLiteDB) CreateMedia(media []*model.Media) (map[int]*model.Media, err
 		return nil, err
 	}
 
-	return media_w_id, nil
+	return mediaWithID, nil
 }
 
-func (db *SQLiteDB) GetMediaTracks(mediaIDs []int) (map[int]*model.MediaTrack, error) {
-	in_placeholder, in_args := build_in_args(mediaIDs)
+func (db *LEASQLiteDB) GetMediaTracks(mediaIDs []int) (map[int]*model.MediaTrack, error) {
+	inPlaceholder, inArgs := buildINStatement(mediaIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM mediatrack WHERE parentMedia IN (%s)", in_placeholder)
+	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM mediatrack WHERE parentMedia IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
-	rows, err := db.db.Query(query, in_args...)
+	rows, err := db.db.Query(query, inArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,14 +150,14 @@ func (db *SQLiteDB) GetMediaTracks(mediaIDs []int) (map[int]*model.MediaTrack, e
 	return allTracks, nil
 }
 
-func (db *SQLiteDB) GetMediaTracksByID(trackIDs []int) (map[int]*model.MediaTrack, error) {
-	in_placeholder, in_args := build_in_args(trackIDs)
+func (db *LEASQLiteDB) GetMediaTracksByID(trackIDs []int) (map[int]*model.MediaTrack, error) {
+	inPlaceholder, inArgs := buildINStatement(trackIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM mediatrack WHERE id IN (%s)", in_placeholder)
+	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM mediatrack WHERE id IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
-	rows, err := db.db.Query(query, in_args...)
+	rows, err := db.db.Query(query, inArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (db *SQLiteDB) GetMediaTracksByID(trackIDs []int) (map[int]*model.MediaTrac
 	return allTracks, nil
 }
 
-func (db *SQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TMPFile, error) {
+func (db *LEASQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TMPFile, error) {
 	insertStmt := "INSERT INTO tmpfile (parentMedia, accessToken, location, maxage) VALUES (?, ?, ?, ?);"
 
 	tx, err := db.db.Begin()
@@ -196,7 +196,7 @@ func (db *SQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TMPFi
 	}
 	defer stmt.Close()
 
-	files_w_id := make(map[int]*model.TMPFile)
+	filesWithID := make(map[int]*model.TMPFile)
 	for _, file := range files {
 		result, err := stmt.Exec(file.ParentMedia, file.AccessToken, file.Location, file.MaxAge)
 		if err != nil {
@@ -211,7 +211,7 @@ func (db *SQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TMPFi
 		}
 
 		file.ID = int(id)
-		files_w_id[file.ID] = file
+		filesWithID[file.ID] = file
 	}
 
 	// Commit the transaction
@@ -221,10 +221,10 @@ func (db *SQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TMPFi
 		return nil, err
 	}
 
-	return files_w_id, nil
+	return filesWithID, nil
 }
 
-func (db *SQLiteDB) GetTMPFileByID([]int) (map[int]*model.TMPFile, error) {
+func (db *LEASQLiteDB) GetTMPFileByID([]int) (map[int]*model.TMPFile, error) {
 	rows, err := db.db.Query("SELECT id, parentMedia, accessToken, location, maxage FROM tmpfile")
 	if err != nil {
 		return nil, err
@@ -233,12 +233,12 @@ func (db *SQLiteDB) GetTMPFileByID([]int) (map[int]*model.TMPFile, error) {
 
 	allFiles := make(map[int]*model.TMPFile)
 	for rows.Next() {
-		var tmpfile model.TMPFile
-		err := rows.Scan(&tmpfile.ID, &tmpfile.ParentMedia, &tmpfile.AccessToken, &tmpfile.Location, &tmpfile.MaxAge)
+		var tmpFile model.TMPFile
+		err := rows.Scan(&tmpFile.ID, &tmpFile.ParentMedia, &tmpFile.AccessToken, &tmpFile.Location, &tmpFile.MaxAge)
 		if err != nil {
 			return nil, err
 		}
-		allFiles[tmpfile.ID] = &tmpfile
+		allFiles[tmpFile.ID] = &tmpFile
 	}
 
 	err = rows.Err()

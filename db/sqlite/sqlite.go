@@ -18,17 +18,17 @@ import (
 //go:embed sqlite_scripts/*.sql
 var embeddedScripts embed.FS
 
-type SQLiteDB struct {
+type LEASQLiteDB struct {
 	db *sql.DB
 }
 
 func InitSQLite(filename string) (db.GenericDB, error) {
-	db, err := openOrCreateDatabase(filename)
+	fileDB, err := openOrCreateDatabase(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return &SQLiteDB{db: db}, nil
+	return &LEASQLiteDB{db: fileDB}, nil
 }
 
 func runUpgradeScripts(db *sql.DB, currentVersion int) error {
@@ -68,18 +68,18 @@ func queryVersion(db *sql.DB) (int, error) {
 
 func openOrCreateDatabase(filename string) (*sql.DB, error) {
 	// Open DB
-	db, err := sql.Open("sqlite3", filename)
+	fileDB, err := sql.Open("sqlite3", filename)
 	if err != nil {
 		return nil, err
 	}
 
 	// if the file does not yet exist we simply create it and are done
 	if !utility.FileExists(filename) {
-		init_script, err := embeddedScripts.ReadFile("sqlite_scripts/sql_init_tables.sql")
+		initScript, err := embeddedScripts.ReadFile("sqlite_scripts/sql_init_tables.sql")
 		if err != nil {
 			return nil, err
 		}
-		_, err = db.Exec(string(init_script))
+		_, err = fileDB.Exec(string(initScript))
 		if err != nil {
 			return nil, err
 		}
@@ -87,13 +87,13 @@ func openOrCreateDatabase(filename string) (*sql.DB, error) {
 	}
 
 	// If the file does exist we have to care about upgrading the database
-	version, err := queryVersion(db)
+	version, err := queryVersion(fileDB)
 	if err != nil {
 		return nil, err
 	}
 
 	// Run table upgrade scripts
-	err = runUpgradeScripts(db, version)
+	err = runUpgradeScripts(fileDB, version)
 
-	return db, err
+	return fileDB, err
 }

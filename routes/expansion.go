@@ -9,22 +9,22 @@ import (
 )
 
 const (
-	EXPAND_MEDIA  = "media"
-	EXPAND_TRACKS = "tracks"
-	EXPAND_ARTIST = "artists"
+	ExpandMedia  = "media"
+	ExpandTracks = "tracks"
+	ExpandArtist = "artists"
 )
 
 func doExpansions(c *fiber.Ctx, db db.GenericDB, resp model.ResponseObject) (model.ResponseObject, error) {
 	// collect ids to expand
-	to_resolve := collectExpansionIDs(c, resp)
+	toResolve := collectExpansionIDs(c, resp)
 
 	// filter out those already present
-	to_resolve[EXPAND_MEDIA] = filterUniqueness(to_resolve[EXPAND_MEDIA], resp.Media)
-	to_resolve[EXPAND_TRACKS] = filterUniqueness(to_resolve[EXPAND_TRACKS], resp.MediaTrack)
-	to_resolve[EXPAND_ARTIST] = filterUniqueness(to_resolve[EXPAND_ARTIST], resp.Artists)
+	toResolve[ExpandMedia] = filterUniqueness(toResolve[ExpandMedia], resp.Media)
+	toResolve[ExpandTracks] = filterUniqueness(toResolve[ExpandTracks], resp.MediaTrack)
+	toResolve[ExpandArtist] = filterUniqueness(toResolve[ExpandArtist], resp.Artists)
 
 	// do expansions
-	resp, err := doExpansion(resp, db, to_resolve)
+	resp, err := doExpansion(resp, db, toResolve)
 	if err != nil {
 		return resp, err
 	}
@@ -32,9 +32,9 @@ func doExpansions(c *fiber.Ctx, db db.GenericDB, resp model.ResponseObject) (mod
 	return resp, nil
 }
 
-func collectExpansionIDs(c *fiber.Ctx, resp model.ResponseObject) (to_resolve map[string][]int) {
+func collectExpansionIDs(c *fiber.Ctx, resp model.ResponseObject) (toResolve map[string][]int) {
 	mediaIDs := make([]int, 0)
-	if hasExpand(c, EXPAND_MEDIA) {
+	if hasExpand(c, ExpandMedia) {
 		for _, m := range resp.MediaTrack {
 			mediaIDs = append(mediaIDs, m.ParentMedia)
 		}
@@ -42,46 +42,46 @@ func collectExpansionIDs(c *fiber.Ctx, resp model.ResponseObject) (to_resolve ma
 			mediaIDs = append(mediaIDs, t.ParentMedia)
 		}
 	}
-	to_resolve[EXPAND_MEDIA] = mediaIDs
+	toResolve[ExpandMedia] = mediaIDs
 
 	trackIDs := make([]int, 0)
-	if hasExpand(c, EXPAND_TRACKS) {
+	if hasExpand(c, ExpandTracks) {
 		for _, m := range resp.Media {
 			trackIDs = append(trackIDs, m.Tracks...)
 		}
 	}
-	to_resolve[EXPAND_TRACKS] = trackIDs
+	toResolve[ExpandTracks] = trackIDs
 
 	artistIDs := make([]int, 0)
-	if hasExpand(c, EXPAND_ARTIST) {
+	if hasExpand(c, ExpandArtist) {
 		for _, m := range resp.Artists {
 			trackIDs = append(artistIDs, m.Members...)
 		}
 	}
-	to_resolve[EXPAND_ARTIST] = artistIDs
+	toResolve[ExpandArtist] = artistIDs
 
 	return
 }
 
-func doExpansion(resp model.ResponseObject, db db.GenericDB, to_resolve map[string][]int) (model.ResponseObject, error) {
-	if len(to_resolve[EXPAND_MEDIA]) > 0 {
-		medias, err := db.GetMediaByID(to_resolve[EXPAND_MEDIA])
+func doExpansion(resp model.ResponseObject, db db.GenericDB, toResolve map[string][]int) (model.ResponseObject, error) {
+	if len(toResolve[ExpandMedia]) > 0 {
+		medias, err := db.GetMediaByID(toResolve[ExpandMedia])
 		if err != nil {
 			return resp, err
 		}
 		resp.Media = mergeMaps(resp.Media, medias)
 	}
 
-	if len(to_resolve[EXPAND_TRACKS]) > 0 {
-		tracks, err := db.GetMediaTracksByID(to_resolve[EXPAND_TRACKS])
+	if len(toResolve[ExpandTracks]) > 0 {
+		tracks, err := db.GetMediaTracksByID(toResolve[ExpandTracks])
 		if err != nil {
 			return resp, err
 		}
 		resp.MediaTrack = mergeMaps(resp.MediaTrack, tracks)
 	}
 
-	if len(to_resolve[EXPAND_ARTIST]) > 0 {
-		artists, err := db.GetArtistsByID(to_resolve[EXPAND_ARTIST])
+	if len(toResolve[ExpandArtist]) > 0 {
+		artists, err := db.GetArtistsByID(toResolve[ExpandArtist])
 		if err != nil {
 			return resp, err
 		}
@@ -91,7 +91,7 @@ func doExpansion(resp model.ResponseObject, db db.GenericDB, to_resolve map[stri
 	return resp, nil
 }
 
-func filterUniqueness[T any](to_resolve []int, present map[int]T) []int {
+func filterUniqueness[T any](toResolve []int, present map[int]T) []int {
 	// Create a map to store the present values as a set
 	presentSet := make(map[int]bool)
 	for key := range present {
@@ -101,9 +101,9 @@ func filterUniqueness[T any](to_resolve []int, present map[int]T) []int {
 	// Second lookup-table to ensure uniqueness
 	seen := make(map[int]bool)
 
-	// Filter the to_resolve list
+	// Filter the toResolve list
 	filtered := make([]int, 0)
-	for _, value := range to_resolve {
+	for _, value := range toResolve {
 		if !presentSet[value] && !seen[value] {
 			filtered = append(filtered, value)
 			seen[value] = true

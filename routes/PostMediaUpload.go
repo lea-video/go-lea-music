@@ -12,12 +12,12 @@ func (rw *RouteWrapper) CreateMediaTMPFile(c *fiber.Ctx) error {
 		return err
 	}
 
-	tmpfile, err := model.NewTMPFile(mid)
+	tmpFile, err := model.NewTMPFile(mid)
 	if err != nil {
 		return err
 	}
 
-	tmpFiles, err := rw.DB.CreateTMPFiles([]*model.TMPFile{tmpfile})
+	tmpFiles, err := rw.DB.CreateTMPFiles([]*model.TMPFile{tmpFile})
 	if err != nil {
 		return err
 	}

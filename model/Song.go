@@ -2,11 +2,11 @@ package model
 
 // NOTE: unused
 type Song struct {
-	ID            int
-	Name          string
-	Artists       []int
-	PreferedAudio int
-	PreferedVideo int
+	ID             int
+	Name           string
+	Artists        []int
+	PreferredAudio int
+	PreferredVideo int
 }
 
 // NOTE: unused

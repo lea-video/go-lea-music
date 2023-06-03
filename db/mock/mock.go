@@ -4,8 +4,8 @@ import (
 	"github.com/lea-video/go-lea-music/db"
 )
 
-type MockDB struct{}
+type LEAMockDB struct{}
 
 func InitMockDB() (db.GenericDB, error) {
-	return &MockDB{}, nil
+	return &LEAMockDB{}, nil
 }

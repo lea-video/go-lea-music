@@ -13,15 +13,15 @@ func (rw *RouteWrapper) GetArtistSolos(c *fiber.Ctx) error {
 
 	// build order id list + typecast artist
 	keys := make([]int, 0, len(solos))
-	typecast_values := make(map[int]*model.OneOfArtist)
+	typecastValues := make(map[int]*model.OneOfArtist)
 	for key, val := range solos {
 		keys = append(keys, key)
-		typecast_values[key] = val.ToOneOf()
+		typecastValues[key] = val.ToOneOf()
 	}
 
 	resp := model.ResponseObject{
 		Order:   keys,
-		Artists: typecast_values,
+		Artists: typecastValues,
 	}
 
 	resp, err = doExpansions(c, rw.DB, resp)

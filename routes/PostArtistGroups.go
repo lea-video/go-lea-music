@@ -22,15 +22,15 @@ func (rw *RouteWrapper) CreateArtistGroup(c *fiber.Ctx) error {
 
 	// build order id list + typecast artist
 	keys := make([]int, 0, len(groups))
-	typecast_values := make(map[int]*model.OneOfArtist)
+	typecastValues := make(map[int]*model.OneOfArtist)
 	for key, val := range groups {
 		keys = append(keys, key)
-		typecast_values[key] = val.ToOneOf()
+		typecastValues[key] = val.ToOneOf()
 	}
 
 	resp := model.ResponseObject{
 		Order:   keys,
-		Artists: typecast_values,
+		Artists: typecastValues,
 	}
 
 	return c.JSON(resp)

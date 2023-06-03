@@ -29,7 +29,7 @@ func (rw *RouteWrapper) AppendMediaTMPFileChunk(c *fiber.Ctx) error {
 	}
 
 	// TODO: update tmp file max age
-	// TODO: if all uploaded mark tmpfile as finished
+	// TODO: if all uploaded mark tmpFile as finished
 
 	return c.JSON(model.ResponseObject{})
 }
