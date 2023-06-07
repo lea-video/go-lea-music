@@ -123,7 +123,7 @@ func (db *LEASQLiteDB) GetMediaTracks(mediaIDs []int) (map[int]*model.MediaTrack
 	inPlaceholder, inArgs := buildINStatement(mediaIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM mediatrack WHERE parentMedia IN (%s)", inPlaceholder)
+	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM media_track WHERE parentMedia IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
 	rows, err := db.db.Query(query, inArgs...)
@@ -154,7 +154,7 @@ func (db *LEASQLiteDB) GetMediaTracksByID(trackIDs []int) (map[int]*model.MediaT
 	inPlaceholder, inArgs := buildINStatement(trackIDs)
 
 	// Construct the query with the placeholders
-	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM mediatrack WHERE id IN (%s)", inPlaceholder)
+	query := fmt.Sprintf("SELECT id, parentMedia, has_audio, has_video, has_picture FROM media_track WHERE id IN (%s)", inPlaceholder)
 
 	// Execute the query with the medias slice
 	rows, err := db.db.Query(query, inArgs...)
@@ -182,7 +182,7 @@ func (db *LEASQLiteDB) GetMediaTracksByID(trackIDs []int) (map[int]*model.MediaT
 }
 
 func (db *LEASQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TMPFile, error) {
-	insertStmt := "INSERT INTO tmpfile (parentMedia, accessToken, location, maxage) VALUES (?, ?, ?, ?);"
+	insertStmt := "INSERT INTO tmp_file (parentMedia, accessToken, location, maxAge) VALUES (?, ?, ?, ?);"
 
 	tx, err := db.db.Begin()
 	if err != nil {
@@ -224,8 +224,14 @@ func (db *LEASQLiteDB) CreateTMPFiles(files []*model.TMPFile) (map[int]*model.TM
 	return filesWithID, nil
 }
 
-func (db *LEASQLiteDB) GetTMPFileByID([]int) (map[int]*model.TMPFile, error) {
-	rows, err := db.db.Query("SELECT id, parentMedia, accessToken, location, maxage FROM tmpfile")
+func (db *LEASQLiteDB) GetTMPFileByID(fileIDs []int) (map[int]*model.TMPFile, error) {
+	inPlaceholder, inArgs := buildINStatement(fileIDs)
+
+	// Construct the query with the placeholders
+	query := fmt.Sprintf("SELECT id, parentMedia, accessToken, location, maxAge FROM tmp_file WHERE parentMedia IN (%s)", inPlaceholder)
+
+	// Execute the query with the medias slice
+	rows, err := db.db.Query(query, inArgs...)
 	if err != nil {
 		return nil, err
 	}

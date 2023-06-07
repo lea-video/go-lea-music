@@ -34,3 +34,7 @@ func (db *LEAMockDB) GetArtistGroups() (map[int]*model.ArtistGroup, error) {
 func (db *LEAMockDB) CreateArtistGroups([]*model.ArtistGroup) (map[int]*model.ArtistGroup, error) {
 	return db.GetArtistGroups()
 }
+
+func (db *LEAMockDB) AddArtistGroupMembers(int, []int) error {
+	return nil
+}

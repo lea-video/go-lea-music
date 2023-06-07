@@ -32,7 +32,9 @@ func doExpansions(c *fiber.Ctx, db db.GenericDB, resp model.ResponseObject) (mod
 	return resp, nil
 }
 
-func collectExpansionIDs(c *fiber.Ctx, resp model.ResponseObject) (toResolve map[string][]int) {
+func collectExpansionIDs(c *fiber.Ctx, resp model.ResponseObject) map[string][]int {
+	toResolve := make(map[string][]int)
+
 	mediaIDs := make([]int, 0)
 	if hasExpand(c, ExpandMedia) {
 		for _, m := range resp.MediaTrack {
@@ -60,7 +62,7 @@ func collectExpansionIDs(c *fiber.Ctx, resp model.ResponseObject) (toResolve map
 	}
 	toResolve[ExpandArtist] = artistIDs
 
-	return
+	return toResolve
 }
 
 func doExpansion(resp model.ResponseObject, db db.GenericDB, toResolve map[string][]int) (model.ResponseObject, error) {

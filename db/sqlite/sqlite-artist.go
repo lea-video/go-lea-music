@@ -221,7 +221,6 @@ func (db *LEASQLiteDB) GetArtistGroupsByID(artistIDs []int) (map[int]*model.Arti
 
 func (db *LEASQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int]*model.ArtistGroup, error) {
 	insertArtist := "INSERT INTO artists (name, is_group) VALUES (?, ?);"
-	insertMember := "INSERT INTO map_artist_group_members (artist_group, member) VALUES (?, ?);"
 
 	tx, err := db.db.Begin()
 	if err != nil {
@@ -234,13 +233,6 @@ func (db *LEASQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int
 		return nil, err
 	}
 	defer stmtArt.Close()
-
-	stmtMem, err := tx.Prepare(insertMember)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	defer stmtMem.Close()
 
 	artistsWithID := make(map[int]*model.ArtistGroup)
 	for _, artist := range artists {
@@ -260,13 +252,7 @@ func (db *LEASQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int
 		artistsWithID[artist.ID] = artist
 
 		// insert the members
-		for _, m := range artist.Members {
-			_, err := stmtMem.Exec(artist.ID, m)
-			if err != nil {
-				tx.Rollback()
-				return nil, err
-			}
-		}
+		db.AddArtistGroupMembers(artist.ID, artist.Members)
 	}
 
 	// Commit the transaction
@@ -277,4 +263,38 @@ func (db *LEASQLiteDB) CreateArtistGroups(artists []*model.ArtistGroup) (map[int
 	}
 
 	return artistsWithID, nil
+}
+
+func (db *LEASQLiteDB) AddArtistGroupMembers(groupID int, members []int) error {
+	insertMember := "INSERT INTO map_artist_group_members (artist_group, member) VALUES (?, ?);"
+
+	tx, err := db.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmtMem, err := tx.Prepare(insertMember)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmtMem.Close()
+
+	// insert the members
+	for _, m := range members {
+		_, err := stmtMem.Exec(groupID, m)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }
